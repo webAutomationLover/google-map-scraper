@@ -222,10 +222,12 @@
         constructor() {
             this.data = new Map();
             this.errorLog = [];
-            this.selectedFields = new Set([
+            this.defaultFields = new Set([
                 'name', 'fullAddress', 'phones', 'website', 
                 'averageRating', 'reviewCount', 'categories'
             ]);
+            this.selectedFields = new Set(this.defaultFields);
+            this.loadSelectedFields();
             this.validationRules = {
                 name: { required: true, minLength: 1 },
                 fullAddress: { required: true, minLength: 5 },
@@ -236,8 +238,31 @@
             };
         }
 
+        loadSelectedFields() {
+            const savedFields = localStorage.getItem('googleMapsScraperSelectedFields');
+            if (savedFields) {
+                this.selectedFields = new Set(JSON.parse(savedFields));
+            }
+        }
+
+        saveSelectedFields() {
+            localStorage.setItem('googleMapsScraperSelectedFields', 
+                JSON.stringify(Array.from(this.selectedFields)));
+        }
+
         addItem(item) {
-            if (!item || !item.placeId) return;
+            if (!item || !item.placeId) {
+                console.log('Skipping item: Missing placeId');
+                return;
+            }
+            
+            const isDuplicate = this.data.has(item.placeId);
+            if (isDuplicate) {
+                console.log(`Duplicate record found - placeId: ${item.placeId}, name: ${item.name}`);
+            } else {
+                console.log(`New record added - placeId: ${item.placeId}, name: ${item.name}`);
+            }
+            
             this.data.set(item.placeId, item);
         }
 
@@ -267,6 +292,7 @@
 
         setSelectedFields(fields) {
             this.selectedFields = new Set(fields);
+            this.saveSelectedFields();
         }
 
         getPreviewData(limit = 5) {
@@ -353,6 +379,11 @@
 
             return data;
         }
+
+        resetToDefaultFields() {
+            this.selectedFields = new Set(this.defaultFields);
+            this.saveSelectedFields();
+        }
     }
 
     class ConfigManager {
@@ -362,11 +393,7 @@
                 scrollInterval: {
                     min: 5,
                     max: 10
-                },
-                defaultFields: [
-                    'name', 'fullAddress', 'phones', 'website', 
-                    'averageRating', 'reviewCount', 'categories'
-                ]
+                }
             };
             this.loadConfig();
         }
@@ -391,23 +418,36 @@
     class AutoScrollManager {
         constructor() {
             this.scrollTimer = null;
+            this.countdownTimer = null;
             this.isLoading = false;
-            this.scrollCount = 0;
-            this.progressBar = null;
             this.config = configManager.config;
-            this.createProgressBar();
+            this.createCountdownDisplay();
         }
 
-        createProgressBar() {
-            this.progressBar = $('<div class="progress mt-2" style="display: none; position: fixed; top: 10px; right: 10px; width: 200px; z-index: 9999;"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>');
-            $('body').append(this.progressBar);
+        createCountdownDisplay() {
+            this.countdownDisplay = $('<div class="countdown-display" style="display: none; position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; z-index: 9999;"></div>');
+            $('body').append(this.countdownDisplay);
         }
 
-        updateProgress() {
-            if (!this.progressBar) return;
-            const progress = Math.min((this.scrollCount / 100) * 100, 100);
-            this.progressBar.find('.progress-bar').css('width', progress + '%');
-            this.progressBar.find('.progress-bar').text(`${progress.toFixed(0)}%`);
+        startCountdown(seconds) {
+            if (this.countdownTimer) {
+                clearInterval(this.countdownTimer);
+            }
+            
+            this.countdownDisplay.show();
+            let remainingSeconds = seconds;
+            
+            const updateDisplay = () => {
+                this.countdownDisplay.text(`Next scroll in ${remainingSeconds}s`);
+                if (remainingSeconds <= 0) {
+                    clearInterval(this.countdownTimer);
+                    this.countdownTimer = null;
+                }
+                remainingSeconds--;
+            };
+            
+            updateDisplay();
+            this.countdownTimer = setInterval(updateDisplay, 1000);
         }
 
         getRandomInteger(min, max) {
@@ -432,7 +472,6 @@
             }
 
             this.isLoading = true;
-            this.progressBar.show();
             console.log('Starting auto scroll with config:', this.config);
 
             // Update button states
@@ -440,7 +479,7 @@
             startAutoScrollButton.removeClass('btn-secondary').addClass('btn-danger');
             bsButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Export Data (' + dataManager.getCount() + ')');
 
-            this.scrollTimer = setInterval(() => {
+            const scroll = () => {
                 const elScroll = document.querySelector('[role="feed"]');
                 if (!elScroll) {
                     console.warn("Scrollable element not found. Stopping auto-scroll.");
@@ -453,26 +492,41 @@
                     behavior: 'smooth'
                 });
 
-                this.scrollCount++;
-                this.updateProgress();
-
                 if (this.checkIfReachedEnd()) {
                     console.log("Reached end of results.");
                     this.stop();
+                    return;
                 }
-            }, this.getRandomInteger(
+
+                // Schedule next scroll
+                const nextInterval = this.getRandomInteger(
+                    this.config.scrollInterval.min,
+                    this.config.scrollInterval.max
+                );
+                this.startCountdown(nextInterval);
+                this.scrollTimer = setTimeout(scroll, nextInterval * 1000);
+            };
+
+            // Start first scroll
+            const firstInterval = this.getRandomInteger(
                 this.config.scrollInterval.min,
                 this.config.scrollInterval.max
-            ) * 1000);
+            );
+            this.startCountdown(firstInterval);
+            this.scrollTimer = setTimeout(scroll, firstInterval * 1000);
         }
 
         stop() {
             if (this.scrollTimer) {
-                clearInterval(this.scrollTimer);
+                clearTimeout(this.scrollTimer);
                 this.scrollTimer = null;
             }
+            if (this.countdownTimer) {
+                clearInterval(this.countdownTimer);
+                this.countdownTimer = null;
+            }
             this.isLoading = false;
-            this.progressBar.hide();
+            this.countdownDisplay.hide();
 
             // Reset button states
             startAutoScrollButton.html('Start Auto Scroll');
@@ -484,6 +538,17 @@
     class ExportManager {
         constructor(dataManager) {
             this.dataManager = dataManager;
+        }
+
+        getFileName(extension) {
+            const now = new Date();
+            const timestamp = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + '-' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            return `google_maps_data_${timestamp}.${extension}`;
         }
 
         exportToXLSX() {
@@ -499,7 +564,7 @@
                 }
 
                 const wbout = XLSX.write(wb, { type: 'binary', bookType: 'xlsx' });
-                this.downloadFile(wbout, 'google_maps_data.xlsx', 'application/octet-stream');
+                this.downloadFile(wbout, this.getFileName('xlsx'), 'application/octet-stream');
             } catch (error) {
                 this.dataManager.logError(error);
                 alert('Error exporting to XLSX. Please check console for details.');
@@ -511,7 +576,7 @@
                 const data = this.dataManager.prepareData();
                 const ws = XLSX.utils.json_to_sheet(data);
                 const csv = XLSX.utils.sheet_to_csv(ws);
-                this.downloadFile(csv, 'google_maps_data.csv', 'text/csv');
+                this.downloadFile(csv, this.getFileName('csv'), 'text/csv');
             } catch (error) {
                 this.dataManager.logError(error);
                 alert('Error exporting to CSV. Please check console for details.');
@@ -522,7 +587,7 @@
             try {
                 const data = this.dataManager.prepareData();
                 const json = JSON.stringify(data, null, 2);
-                this.downloadFile(json, 'google_maps_data.json', 'application/json');
+                this.downloadFile(json, this.getFileName('json'), 'application/json');
             } catch (error) {
                 this.dataManager.logError(error);
                 alert('Error exporting to JSON. Please check console for details.');
@@ -613,6 +678,9 @@
                             </div>
                             <div class="form-group">
                                 <label>Scroll Interval (seconds)</label>
+                                <small class="form-text text-muted mb-2">
+                                    Set a range for random interval between scrolls. The script will randomly choose a value between min and max.
+                                </small>
                                 <div class="row">
                                     <div class="col">
                                         <input type="number" class="form-control" id="scrollIntervalMin" 
@@ -622,11 +690,6 @@
                                         <input type="number" class="form-control" id="scrollIntervalMax" 
                                                placeholder="Max" value="${configManager.config.scrollInterval.max}">
                                     </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Default Export Fields</label>
-                                <div id="defaultFieldsSelector" class="d-flex flex-wrap">
                                 </div>
                             </div>
                         </form>
@@ -646,7 +709,6 @@
     configButton.click(() => {
         console.log('Config button clicked');
         try {
-            updateDefaultFieldsSelector();
             if ($('#configModal').length === 0) {
                 console.error('Config modal not found in DOM');
                 return;
@@ -658,28 +720,6 @@
         }
     });
 
-    function updateDefaultFieldsSelector() {
-        const selector = $('#defaultFieldsSelector');
-        selector.empty();
-        
-        const allFields = [
-            'name', 'fullAddress', 'phones', 'website', 'averageRating', 
-            'reviewCount', 'categories', 'featuredImage', 'latitude', 
-            'longitude', 'street', 'municipality', 'openingHours'
-        ];
-
-        allFields.forEach(field => {
-            const div = $(`
-                <div class="custom-control custom-checkbox mr-3 mb-2">
-                    <input type="checkbox" class="custom-control-input" id="default_field_${field}" 
-                           ${configManager.config.defaultFields.includes(field) ? 'checked' : ''}>
-                    <label class="custom-control-label" for="default_field_${field}">${field}</label>
-                </div>
-            `);
-            selector.append(div);
-        });
-    }
-
     // Save configuration
     $('#saveConfig').click(() => {
         const newConfig = {
@@ -687,18 +727,10 @@
             scrollInterval: {
                 min: parseInt($('#scrollIntervalMin').val()),
                 max: parseInt($('#scrollIntervalMax').val())
-            },
-            defaultFields: []
+            }
         };
 
-        $('.custom-control-input', '#defaultFieldsSelector').each(function() {
-            if (this.checked) {
-                newConfig.defaultFields.push($(this).attr('id').replace('default_field_', ''));
-            }
-        });
-
         configManager.updateConfig(newConfig);
-        dataManager.setSelectedFields(new Set(newConfig.defaultFields));
         
         $('#configModal').modal('hide');
     });
@@ -857,7 +889,13 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label>Select Export Fields:</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="mb-0">Select Export Fields:</label>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mr-2" id="selectAllFields">Select All</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="resetFields">Reset</button>
+                                </div>
+                            </div>
                             <div id="fieldSelector" class="d-flex flex-wrap">
                             </div>
                         </div>
@@ -870,6 +908,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-danger" id="clearData">Clear Data</button>
                         <button type="button" class="btn btn-success" id="exportXLSX">Export XLSX</button>
                         <button type="button" class="btn btn-info" id="exportCSV">Export CSV</button>
                         <button type="button" class="btn btn-warning" id="exportJSON">Export JSON</button>
@@ -879,7 +918,31 @@
         </div>
     `;
 
+    // Create confirmation modal for clearing data
+    const confirmModalHTML = `
+        <div class="modal fade" id="confirmClearModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Clear Data</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to clear all collected data? This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmClear">Clear All Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
     $('body').append(previewModalHTML);
+    $('body').append(confirmModalHTML);
 
     function updatePreviewTable() {
         const previewData = dataManager.getPreviewData();
@@ -913,7 +976,9 @@
         const allFields = [
             'name', 'fullAddress', 'phones', 'website', 'averageRating', 
             'reviewCount', 'categories', 'featuredImage', 'latitude', 
-            'longitude', 'street', 'municipality', 'openingHours'
+            'longitude', 'street', 'municipality', 'openingHours',
+            'placeId', 'kgmid', 'feature', 'cid', 'icon', 'reviewURL',
+            'domain', 'googleMapsURL', 'googleKnowledgeURL'
         ];
 
         allFields.forEach(field => {
@@ -932,9 +997,40 @@
             const field = $(this).attr('id').replace('field_', '');
             if (this.checked) {
                 dataManager.selectedFields.add(field);
+                dataManager.saveSelectedFields();
+                updatePreviewTable();
             } else {
+                // Check if this is the last selected field
+                if (dataManager.selectedFields.size <= 1) {
+                    // Prevent unchecking the last field
+                    $(this).prop('checked', true);
+                    alert('至少需要选择一个导出字段');
+                    return;
+                }
                 dataManager.selectedFields.delete(field);
+                dataManager.saveSelectedFields();
+                updatePreviewTable();
             }
+        });
+
+        // Add select all button event listener
+        $('#selectAllFields').off('click').on('click', () => {
+            $('.custom-control-input').prop('checked', true);
+            allFields.forEach(field => {
+                dataManager.selectedFields.add(field);
+            });
+            dataManager.saveSelectedFields();
+            updatePreviewTable();
+        });
+
+        // Add reset button event listener
+        $('#resetFields').off('click').on('click', () => {
+            dataManager.resetToDefaultFields();
+            // Update checkboxes to match default fields
+            $('.custom-control-input').each(function() {
+                const field = $(this).attr('id').replace('field_', '');
+                $(this).prop('checked', dataManager.selectedFields.has(field));
+            });
             updatePreviewTable();
         });
     }
@@ -952,6 +1048,21 @@
 
     $('#exportJSON').click(() => {
         exportManager.exportToJSON();
+        $('#previewModal').modal('hide');
+    });
+
+    // Add clear data button event listener
+    $('#clearData').click(() => {
+        $('#confirmClearModal').modal('show');
+    });
+
+    // Add confirm clear button event listener
+    $('#confirmClear').click(() => {
+        dataManager.data.clear();
+        dataManager.errorLog = [];
+        updateButtonText();
+        updatePreviewTable();
+        $('#confirmClearModal').modal('hide');
         $('#previewModal').modal('hide');
     });
 
