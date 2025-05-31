@@ -396,6 +396,7 @@
                 }
             };
             this.loadConfig();
+            this.onConfigChange = null;
         }
 
         loadConfig() {
@@ -412,6 +413,9 @@
         updateConfig(newConfig) {
             this.config = { ...this.config, ...newConfig };
             this.saveConfig();
+            if (this.onConfigChange) {
+                this.onConfigChange(this.config);
+            }
         }
     }
 
@@ -420,7 +424,6 @@
             this.scrollTimer = null;
             this.countdownTimer = null;
             this.isLoading = false;
-            this.config = configManager.config;
             this.createCountdownDisplay();
         }
 
@@ -462,6 +465,36 @@
             return lastChild && lastChild.getAttribute('style')?.includes('height: 64px');
         }
 
+        scroll() {
+            const elScroll = document.querySelector('[role="feed"]');
+            if (!elScroll) {
+                console.warn("Scrollable element not found. Stopping auto-scroll.");
+                this.stop();
+                return;
+            }
+
+            // 每次滚动时重新读取配置
+            const config = configManager.config;
+            elScroll.scrollBy({
+                top: config.scrollSpeed,
+                behavior: 'smooth'
+            });
+
+            if (this.checkIfReachedEnd()) {
+                console.log("Reached end of results.");
+                this.stop();
+                return;
+            }
+
+            // 使用最新的配置计算下一次滚动的时间间隔
+            const nextInterval = this.getRandomInteger(
+                config.scrollInterval.min,
+                config.scrollInterval.max
+            );
+            this.startCountdown(nextInterval);
+            this.scrollTimer = setTimeout(() => this.scroll(), nextInterval * 1000);
+        }
+
         start() {
             if (this.isLoading) return;
 
@@ -472,48 +505,21 @@
             }
 
             this.isLoading = true;
-            console.log('Starting auto scroll with config:', this.config);
+            console.log('Starting auto scroll with config:', configManager.config);
 
             // Update button states
             startAutoScrollButton.html('Stop Auto Scroll');
             startAutoScrollButton.removeClass('btn-secondary').addClass('btn-danger');
             bsButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Export Data (' + dataManager.getCount() + ')');
 
-            const scroll = () => {
-                const elScroll = document.querySelector('[role="feed"]');
-                if (!elScroll) {
-                    console.warn("Scrollable element not found. Stopping auto-scroll.");
-                    this.stop();
-                    return;
-                }
-
-                elScroll.scrollBy({
-                    top: this.config.scrollSpeed,
-                    behavior: 'smooth'
-                });
-
-                if (this.checkIfReachedEnd()) {
-                    console.log("Reached end of results.");
-                    this.stop();
-                    return;
-                }
-
-                // Schedule next scroll
-                const nextInterval = this.getRandomInteger(
-                    this.config.scrollInterval.min,
-                    this.config.scrollInterval.max
-                );
-                this.startCountdown(nextInterval);
-                this.scrollTimer = setTimeout(scroll, nextInterval * 1000);
-            };
-
-            // Start first scroll
+            // 使用最新的配置开始第一次滚动
+            const config = configManager.config;
             const firstInterval = this.getRandomInteger(
-                this.config.scrollInterval.min,
-                this.config.scrollInterval.max
+                config.scrollInterval.min,
+                config.scrollInterval.max
             );
             this.startCountdown(firstInterval);
-            this.scrollTimer = setTimeout(scroll, firstInterval * 1000);
+            this.scrollTimer = setTimeout(() => this.scroll(), firstInterval * 1000);
         }
 
         stop() {
@@ -563,8 +569,23 @@
                     XLSX.utils.book_append_sheet(wb, errorWs, 'Errors');
                 }
 
-                const wbout = XLSX.write(wb, { type: 'binary', bookType: 'xlsx' });
-                this.downloadFile(wbout, this.getFileName('xlsx'), 'application/octet-stream');
+                // Convert to binary string
+                const wbout = XLSX.write(wb, { 
+                    bookType: 'xlsx', 
+                    type: 'binary',
+                    bookSST: true
+                });
+
+                // Convert binary string to array buffer
+                const buf = new ArrayBuffer(wbout.length);
+                const view = new Uint8Array(buf);
+                for (let i = 0; i < wbout.length; i++) {
+                    view[i] = wbout.charCodeAt(i) & 0xFF;
+                }
+
+                // Create blob and download
+                const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                this.downloadFile(blob, this.getFileName('xlsx'), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             } catch (error) {
                 this.dataManager.logError(error);
                 alert('Error exporting to XLSX. Please check console for details.');
@@ -595,11 +616,12 @@
         }
 
         downloadFile(content, filename, mimeType) {
-            const blob = new Blob([content], { type: mimeType });
+            const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = filename;
             a.click();
+            URL.revokeObjectURL(a.href);
         }
     }
 
