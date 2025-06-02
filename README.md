@@ -17,6 +17,15 @@ Join our Discord server to get help, share ideas, and connect with other users o
 *   Allows you to export collected data in common formats (see Usage).
 *   Easy to use, no complex configuration required.
 
+## Browser Compatibility
+
+| Supported Browsers | Not Supported Browsers |
+|---|---|
+| Firefox | Chrome |
+| Safari | |
+| Edge |  |
+| Opera |  |
+
 ## Prerequisites
 
 **Important:** Google Maps Scraper is only supported on **Firefox browser** and **does not work on Chrome**.
