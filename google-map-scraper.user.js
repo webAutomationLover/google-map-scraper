@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         google map scraper
 // @namespace    http://google.com/
-// @version      1.0.2
+// @version      1.0.3
 // @description  google map result
 // @author       Web Automation Lover
 // @match        *://*.google.com/maps/search/*/*
@@ -477,7 +477,7 @@
                 return;
             }
 
-            // 每次滚动时重新读取配置
+            // Read the latest config before each scroll
             const config = configManager.config;
             elScroll.scrollBy({
                 top: config.scrollSpeed,
@@ -490,7 +490,7 @@
                 return;
             }
 
-            // 使用最新的配置计算下一次滚动的时间间隔
+            // Use the latest config to calculate the next scroll interval
             const nextInterval = this.getRandomInteger(
                 config.scrollInterval.min,
                 config.scrollInterval.max
@@ -516,7 +516,7 @@
             startAutoScrollButton.removeClass('btn-secondary').addClass('btn-danger');
             bsButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Export Data (' + dataManager.getCount() + ')');
 
-            // 使用最新的配置开始第一次滚动
+            // Use the latest config to start the first scroll
             const config = configManager.config;
             const firstInterval = this.getRandomInteger(
                 config.scrollInterval.min,
@@ -1030,7 +1030,7 @@
                 if (dataManager.selectedFields.size <= 1) {
                     // Prevent unchecking the last field
                     $(this).prop('checked', true);
-                    alert('至少需要选择一个导出字段');
+                    alert('At least one export field must be selected');
                     return;
                 }
                 dataManager.selectedFields.delete(field);
