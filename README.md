@@ -4,6 +4,12 @@
 
 **A Tampermonkey script to automate the collection of Google Maps search results, making it easy to export and use local business information.**
 
+## Join the Community
+
+[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-7289DA?logo=discord&logoColor=white)](https://discord.gg/ndt3PwQBgn)
+
+Join our Discord server to get help, share ideas, and connect with other users of the Google Maps Scraper!
+
 ## Features
 
 *   Collects local business information from Google Maps search results.
