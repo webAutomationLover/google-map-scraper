@@ -1,4 +1,4 @@
-![Banner Image](https://example.com/banner.png)
+![Banner Image](https://raw.githubusercontent.com/webAutomationLover/google-map-scraper/refs/heads/main/resource/banner.png)
 
 # Google Maps Scraper
 
