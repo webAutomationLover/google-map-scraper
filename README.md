@@ -2,7 +2,7 @@
 
 # Google Maps Scraper
 
-**A Tampermonkey script to automate the collection of Google Maps search results, making it easy to export and use local business information.**
+**A free and open-source Tampermonkey script that automates the process of scraping Google Maps search results, providing an unlimited leads generator and allowing you to easily export and utilize local business data.**
 
 ## Join the Community
 
