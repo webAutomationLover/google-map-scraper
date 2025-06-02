@@ -203,8 +203,8 @@
 // @match        *://*.google.co.za/maps/search/**
 // @match        *://*.google.co.zm/maps/search/**
 // @match        *://*.google.co.zw/maps/search/**
-// @updateUrl    https://github.com/webAutomationLover/google-map-scraper/raw/refs/heads/main/google-map-scraper.user.js
-// @downloadUrl  https://github.com/webAutomationLover/google-map-scraper/raw/refs/heads/main/google-map-scraper.user.js
+// @updateURL    https://github.com/webAutomationLover/google-map-scraper/raw/refs/heads/main/google-map-scraper.user.js
+// @downloadURL  https://github.com/webAutomationLover/google-map-scraper/raw/refs/heads/main/google-map-scraper.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=xiaohongshu.com
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
