@@ -38,15 +38,19 @@ Join our Discord server to get help, share ideas, and connect with other users o
 
 2. **Install the Google Maps Scraper script:**
 
-    Click [here](https://github.com/webAutomationLover/google-map-scraper/blob/main/google-map-scraper.user.js) to install the Google Maps Scraper script. This link will open the script page on GitHub.
+    You can install the Google Maps Scraper script in two ways:
 
-    Next, click the "Raw" button, as shown in the image below:
+    **Method 1: Install from Greasy Fork (Recommended)**
 
-    *Screenshot showing the location of the "Raw" button on the GitHub script page.*
+    * Click [here](https://greasyfork.org/en/scripts/537223-google-map-scraper) to install the Google Maps Scraper script. After installation, Tampermonkey will automatically manage the script.
 
+    **Method 2: Install from GitHub**
+
+    * Click [here](https://github.com/webAutomationLover/google-map-scraper/blob/main/google-map-scraper.user.js) to install the Google Maps Scraper script. This link will open the script page on GitHub.
+    * On that page, click the "Raw" button.
+    * *Screenshot showing the location of the "Raw" button on the GitHub script page.*
     ![Install Button](https://raw.githubusercontent.com/webAutomationLover/google-map-scraper/refs/heads/main/resource/install_btn.png)
-
-    Clicking the "Raw" button will redirect you to the Tampermonkey script installation page. After installation, Tampermonkey will automatically manage the script.
+    * Clicking the "Raw" button will redirect you to the Tampermonkey script installation page. After installation, Tampermonkey will automatically manage the script.
 
 3. **Verify successful installation:**
 
