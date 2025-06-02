@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         google map scraper
 // @namespace    http://google.com/
-// @version      1.0.1
+// @version      1.0.2
 // @description  google map result
 // @author       Web Automation Lover
 // @match        *://*.google.com/maps/search/*/*
@@ -215,7 +215,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
 // @require      https://code.jquery.com/jquery-3.5.1.min.js
 // @require      https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js
-// @require      https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js
 // @run-at       document-end
 // ==/UserScript==
 
