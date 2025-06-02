@@ -1,55 +1,70 @@
-# Google Maps Search Result Accumulator & One-Click Export (Non-Chrome Browser Specific)
+![Banner Image](https://example.com/banner.png)
 
-## Introduction
+# Google Maps Scraper
 
-Hey everyone! I'm a web automation enthusiast. Recently, I decided to develop a script to help a friend with a tedious Google Maps data collection task. My friend needed to repeatedly search for information in specific areas on Google Maps and then manually copy and paste it into an Excel spreadsheet. This process was time-consuming and prone to errors, which was incredibly frustrating!
-
-So, I spent about a week using web automation techniques to write this userscript. It automatically **accumulates** all your search results on Google Maps, no matter if you scroll down to refresh, drag the map to different locations, or perform new searches. It automatically captures the key information and allows you to **export everything in one click** as an Excel (.xlsx) file. Say goodbye to the pain of manual copy-pasting and make data collection easy and efficient!
-
-While helping my friend solve this problem, I discovered that the script was even more practical than I anticipated. So, I decided to share it with everyone in the hope that it can help more people in need.
+**A Tampermonkey script to automate the collection of Google Maps search results, making it easy to export and use local business information.**
 
 ## Features
 
-*   **Accumulated Recording of All Searches (Non-Chrome Browser):** This script is optimized for Firefox, Edge, Safari, and other browsers to automatically record every search result on Google Maps without missing any information.
-*   **Covers Scrolling Refresh, Map Dragging, and New Searches (Non-Chrome Browser):** No matter how you get new search results, the script will automatically grab them and add them to the record.
-*   **One-Click Export to Excel (Non-Chrome Browser):** After you complete all your searches, simply click the button to export all accumulated records in one go to an Excel (.xlsx) file.
-    *   Location Name
-    *   Full Address
-    *   User Rating (if available)
-    *   Location Category (e.g., restaurant, hotel, etc.)
-    *   Google Maps Link
+*   Collects local business information from Google Maps search results.
+*   Supports automatic scrolling to load more results.
+*   Allows you to export collected data in common formats (see Usage).
+*   Easy to use, no complex configuration required.
 
-## Highlights
+## Prerequisites
 
-*   **Born from Real Needs:** The script was created to solve a real-world problem, and its practicality has been proven.
-*   **My Labor of Love:** Carefully crafted over a week to be simple and easy to use.
-*   **New Feature Requests Welcome:** If you have any ideas or suggestions, feel free to submit them, and I'll do my best to improve it.
-*   **Good Compatibility:** Compatible with mainstream non-Chrome browsers, providing stable data capture and export functionality.
-*   **Export to .xlsx Format:** The exported file is a standard Excel spreadsheet (.xlsx) file, so you don't need to convert the format for easy use.
+**Important:** Google Maps Scraper is only supported on **Firefox browser** and **does not work on Chrome**.
 
-## Use Cases
+1.  **Install Tampermonkey (Firefox only):**
 
-*   In-depth Market Research: Completely record all merchant information in specific areas for comprehensive analysis.
-*   Travel Planning: Collect information on attractions and accommodations in multiple areas to easily create a detailed itinerary.
-*   Data Analysis: Import Google Maps data into other tools for in-depth analysis.
+    Google Maps Scraper requires the Tampermonkey extension to run on Firefox. Please install the following version:
 
-## How to Use
+    *   **Firefox:** [Tampermonkey for Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
 
-1.  **Please do not install this script on the Chrome browser.**
-2.  Click the "Install this script" button in Firefox, Edge, Safari, or other supported browsers.
-3.  Use a supported browser on Google Maps (google.com/maps) to perform multiple searches, including scrolling to refresh, dragging the map to different locations, and performing new searches.
-4.  When you finish all your searches, click the "Export All Search Results" button (or a button with a similar name) on the page.
-5.  Download the Excel (.xlsx) file and open it using Microsoft Excel or other compatible spreadsheet software.
+2.  **Install the Google Maps Scraper script:**
 
-## Important Notes
+    Click [here](**[INSERT YOUR SCRIPT LINK HERE]**) to install the Google Maps Scraper script.  After installation, Tampermonkey will automatically manage the script.
 
-*   **This script *CANNOT* run on the Chrome browser! Do not attempt to install and use it on Chrome.**
-*   The exported .xlsx files can be opened with software such as Microsoft Excel, Google Sheets, and LibreOffice Calc.
-*   [Optional - Limitations: e.g., The script may be affected by Google Maps page updates, causing data capture to fail]
-*   [Optional - Disclaimer: e.g., Add a simple disclaimer]
-*   If you can't open the .xlsx file correctly, make sure that your spreadsheet software supports this format.
-*   **Although it is theoretically supported on browsers such as Firefox, Edge, and Safari, you may need to test it in different browsers to ensure full compatibility.**
+3.  **Verify successful installation:**
 
-## Feedback & Support
+    After installation, open [Google Maps](https://www.google.com/maps). If you see the **"Export"** and **"Start Auto Scroll"** buttons on the page, Google Maps Scraper has been successfully installed and is running. If you don't see these buttons, check that Tampermonkey is enabled and the script is installed correctly.
 
-I look forward to your feedback! Your every suggestion is my motivation for improvement. If you encounter any problems while using a non-Chrome browser, please submit an Issue or Pull Request. Be sure to specify your browser type and version so I can troubleshoot the problem. Let's work together to make this script even better!
+## Usage
+
+1.  **Open Google Maps:** Visit [Google Maps](https://www.google.com/maps) in your browser.
+
+2.  **Search:** Enter your desired keywords in Google Maps, such as "rent car in New York".
+
+3.  **Script automatically collects and organizes data:** The script will automatically collect and organize the data.
+
+4.  **Export data:** Click the "Export" button to export the collected data in CSV, JSON, and Excel formats.
+
+    **(INSERT EXPORT DATA SCREENSHOT HERE)**  *Screenshot showing the location of the export button and the data content. Preferably showing the format selection.*
+
+    ```csv
+    Name,Address,Phone,Rating
+    "Coffee Shop A","123 Main St","555-1234","4.5"
+    "Restaurant B","456 Oak Ave","555-5678","4.0"
+    "Local Store C","789 Pine Ln","789 Pine Ln","3.8"
+    ```
+
+5.  **Scroll to load more:** Scroll to the bottom of the page, and the script will automatically load more search results. Repeat this until you have collected enough data.
+
+## Feature: Automatic Scrolling
+
+The script automatically scrolls the page to load more search results, allowing you to collect large amounts of data at once. You don't need to scroll manually; the script does it automatically.
+
+## About Me
+
+I am a developer passionate about web automation. For the past 4 years, I worked at a digital marketing company, developing various productivity tools for the team. Compared to Python, command-line tools, etc., I prefer using Tampermonkey to quickly meet the team's needs because it is more intuitive, eliminates the need to install a development environment, and is more user-friendly. I hope Google Maps Scraper is helpful to you!
+
+## Contact
+
+If you encounter any problems during use or have any new ideas and suggestions, please feel free to contact me via:
+
+*   **Discord Community:** [https://discord.gg/ndt3PwQBgn](https://discord.gg/ndt3PwQBgn)
+*   **Email:** extensionkit.rdt001@gmail.com
+
+## Disclaimer
+
+This Google Maps Scraper is intended for educational and research purposes only. By using this Google Maps Scraper, you agree to comply with local and international laws relating to data scraping and privacy. The author and contributors are not responsible for any misuse of this software. This tool must not be used to infringe the rights of others, for unethical purposes, or to use data in an unauthorized or unlawful manner.
