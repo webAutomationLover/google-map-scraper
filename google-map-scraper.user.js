@@ -206,9 +206,9 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=xiaohongshu.com
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
+// @resource     bootstrapCSS https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css
 // @require      https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
-// @resource     bootstrapCSS https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css
 // @require      https://code.jquery.com/jquery-3.5.1.min.js
 // @require      https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js
 // @require      https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js
@@ -223,7 +223,7 @@
             this.data = new Map();
             this.errorLog = [];
             this.defaultFields = new Set([
-                'name', 'fullAddress', 'phones', 'website', 
+                'name', 'fullAddress', 'phones', 'website',
                 'averageRating', 'reviewCount', 'categories'
             ]);
             this.selectedFields = new Set(this.defaultFields);
@@ -246,7 +246,7 @@
         }
 
         saveSelectedFields() {
-            localStorage.setItem('googleMapsScraperSelectedFields', 
+            localStorage.setItem('googleMapsScraperSelectedFields',
                 JSON.stringify(Array.from(this.selectedFields)));
         }
 
@@ -255,14 +255,14 @@
                 console.log('Skipping item: Missing placeId');
                 return;
             }
-            
+
             const isDuplicate = this.data.has(item.placeId);
             if (isDuplicate) {
                 console.log(`Duplicate record found - placeId: ${item.placeId}, name: ${item.name}`);
             } else {
                 console.log(`New record added - placeId: ${item.placeId}, name: ${item.name}`);
             }
-            
+
             this.data.set(item.placeId, item);
         }
 
@@ -303,11 +303,11 @@
             const errors = [];
             Object.entries(this.validationRules).forEach(([field, rules]) => {
                 const value = item[field];
-                
+
                 if (rules.required && (!value || value.length === 0)) {
                     errors.push(`${field} is required`);
                 }
-                
+
                 if (value) {
                     if (rules.minLength && value.length < rules.minLength) {
                         errors.push(`${field} length cannot be less than ${rules.minLength}`);
@@ -436,10 +436,10 @@
             if (this.countdownTimer) {
                 clearInterval(this.countdownTimer);
             }
-            
+
             this.countdownDisplay.show();
             let remainingSeconds = seconds;
-            
+
             const updateDisplay = () => {
                 this.countdownDisplay.text(`Next scroll in ${remainingSeconds}s`);
                 if (remainingSeconds <= 0) {
@@ -448,7 +448,7 @@
                 }
                 remainingSeconds--;
             };
-            
+
             updateDisplay();
             this.countdownTimer = setInterval(updateDisplay, 1000);
         }
@@ -460,7 +460,7 @@
         checkIfReachedEnd() {
             const elScroll = document.querySelector('[role="feed"]');
             if (!elScroll) return false;
-            
+
             const lastChild = elScroll.lastElementChild;
             return lastChild && lastChild.getAttribute('style')?.includes('height: 64px');
         }
@@ -570,8 +570,8 @@
                 }
 
                 // Convert to binary string
-                const wbout = XLSX.write(wb, { 
-                    bookType: 'xlsx', 
+                const wbout = XLSX.write(wb, {
+                    bookType: 'xlsx',
                     type: 'binary',
                     bookSST: true
                 });
@@ -753,7 +753,7 @@
         };
 
         configManager.updateConfig(newConfig);
-        
+
         $('#configModal').modal('hide');
     });
 
@@ -969,7 +969,7 @@
     function updatePreviewTable() {
         const previewData = dataManager.getPreviewData();
         const fields = dataManager.getSelectedFields();
-        
+
         // Update table header
         const thead = $('#previewTableHead');
         thead.empty();
@@ -994,10 +994,10 @@
     function updateFieldSelector() {
         const fieldSelector = $('#fieldSelector');
         fieldSelector.empty();
-        
+
         const allFields = [
-            'name', 'fullAddress', 'phones', 'website', 'averageRating', 
-            'reviewCount', 'categories', 'featuredImage', 'latitude', 
+            'name', 'fullAddress', 'phones', 'website', 'averageRating',
+            'reviewCount', 'categories', 'featuredImage', 'latitude',
             'longitude', 'street', 'municipality', 'openingHours',
             'placeId', 'kgmid', 'feature', 'cid', 'icon', 'reviewURL',
             'domain', 'googleMapsURL', 'googleKnowledgeURL'
