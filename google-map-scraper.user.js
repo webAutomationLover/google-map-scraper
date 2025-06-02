@@ -205,6 +205,8 @@
 // @match        *://*.google.co.zw/maps/search/**
 // @updateURL    https://github.com/webAutomationLover/google-map-scraper/raw/refs/heads/main/google-map-scraper.user.js
 // @downloadURL  https://github.com/webAutomationLover/google-map-scraper/raw/refs/heads/main/google-map-scraper.user.js
+// @supportURL   https://github.com/webAutomationLover/google-map-scraper/issues
+// @homepageURL  https://github.com/webAutomationLover/google-map-scraper
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=xiaohongshu.com
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
