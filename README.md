@@ -62,7 +62,11 @@ The script automatically scrolls the page to load more search results, allowing 
 
 ## About Me
 
-I am a developer passionate about web automation. For the past 4 years, I worked at a digital marketing company, developing various productivity tools for the team. Compared to Python, command-line tools, etc., I prefer using Tampermonkey to quickly meet the team's needs because it is more intuitive, eliminates the need to install a development environment, and is more user-friendly. I hope Google Maps Scraper is helpful to you!
+I am a developer passionate about web automation. For the past 4 years, I worked at a digital marketing company, developing various productivity tools for the team. 
+
+Compared to Python, command-line tools, etc., I prefer using Tampermonkey to quickly meet the team's needs because it is more intuitive, eliminates the need to install a development environment, and is more user-friendly. 
+
+I hope Google Maps Scraper is helpful to you!
 
 ## Contact
 
