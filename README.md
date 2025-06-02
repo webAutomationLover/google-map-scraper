@@ -15,23 +15,35 @@
 
 **Important:** Google Maps Scraper is only supported on **Firefox browser** and **does not work on Chrome**.
 
-1.  **Install Tampermonkey (Firefox only):**
+1. **Install Tampermonkey (Firefox only):**
 
     Google Maps Scraper requires the Tampermonkey extension to run on Firefox. Please install the following version:
 
     *   **Firefox:** [Tampermonkey for Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
 
-2.  **Install the Google Maps Scraper script:**
+2. **Install the Google Maps Scraper script:**
 
-    Click [here](**[INSERT YOUR SCRIPT LINK HERE]**) to install the Google Maps Scraper script.  After installation, Tampermonkey will automatically manage the script.
+    Click [here](https://github.com/webAutomationLover/google-map-scraper/blob/main/google-map-scraper.user.js) to install the Google Maps Scraper script. This link will open the script page on GitHub.
 
-3.  **Verify successful installation:**
+    Next, click the "Raw" button, as shown in the image below:
 
-    After installation, open [Google Maps](https://www.google.com/maps). If you see the **"Export"** and **"Start Auto Scroll"** buttons on the page, Google Maps Scraper has been successfully installed and is running. If you don't see these buttons, check that Tampermonkey is enabled and the script is installed correctly.
+    *Screenshot showing the location of the "Raw" button on the GitHub script page.*
+
+    ![Install Button](https://raw.githubusercontent.com/webAutomationLover/google-map-scraper/refs/heads/main/resource/install_btn.png)
+
+    Clicking the "Raw" button will redirect you to the Tampermonkey script installation page. After installation, Tampermonkey will automatically manage the script.
+
+3. **Verify successful installation:**
+
+    To verify that the script has been installed correctly, open the Tampermonkey dashboard. You should see the newly installed script listed there.
+   ![DashBoard](https://raw.githubusercontent.com/webAutomationLover/google-map-scraper/refs/heads/main/resource/dashboard.png)
+
+    After installation, open [Google Maps](https://www.google.com/maps/search/new+york+car+rental/@40.7319892,-73.9923282,22015m). If you see the **"Export"** and **"Start Auto Scroll"** buttons on the page, Google Maps Scraper has been successfully installed and is running. If you don't see these buttons, check that Tampermonkey is enabled and the script is installed correctly.
+   ![Activated](https://raw.githubusercontent.com/webAutomationLover/google-map-scraper/refs/heads/main/resource/actived.png)
 
 ## Usage
 
-1.  **Open Google Maps:** Visit [Google Maps](https://www.google.com/maps) in your browser.
+1.  **Open Google Maps:** Visit [Google Maps](https://www.google.com/maps/search/new+york+car+rental/@40.7319892,-73.9923282,22015m) in your browser.
 
 2.  **Search:** Enter your desired keywords in Google Maps, such as "rent car in New York".
 
@@ -39,14 +51,8 @@
 
 4.  **Export data:** Click the "Export" button to export the collected data in CSV, JSON, and Excel formats.
 
-    **(INSERT EXPORT DATA SCREENSHOT HERE)**  *Screenshot showing the location of the export button and the data content. Preferably showing the format selection.*
-
-    ```csv
-    Name,Address,Phone,Rating
-    "Coffee Shop A","123 Main St","555-1234","4.5"
-    "Restaurant B","456 Oak Ave","555-5678","4.0"
-    "Local Store C","789 Pine Ln","789 Pine Ln","3.8"
-    ```
+    *Screenshot showing the data content.*
+    ![exported](https://raw.githubusercontent.com/webAutomationLover/google-map-scraper/refs/heads/main/resource/exported.png)
 
 5.  **Scroll to load more:** Scroll to the bottom of the page, and the script will automatically load more search results. Repeat this until you have collected enough data.
 
