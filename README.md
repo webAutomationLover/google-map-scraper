@@ -12,7 +12,7 @@ Join our Discord server to get help, share ideas, and connect with other users o
 
 ## Features
 
-*   Collects local business information from Google Maps search results.
+*   Collects local business information from Google Maps search results with emails.
 *   Supports automatic scrolling to load more results.
 *   Allows you to export collected data in common formats (see Usage).
 *   Easy to use, no complex configuration required.

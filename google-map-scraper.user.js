@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         google map scraper
 // @namespace    http://google.com/
-// @version      1.0.3
-// @description  google map result
+// @version      1.0.4
+// @description  Google map scraper: An open-source, free tool to obtain unlimited local business examples with email addresses.
 // @author       Web Automation Lover
 // @match        *://*.google.com/maps/search/*/*
 // @match        *://*.google.ad/maps/search/**
@@ -228,7 +228,7 @@
             this.errorLog = [];
             this.defaultFields = new Set([
                 'name', 'fullAddress', 'phones', 'website',
-                'averageRating', 'reviewCount', 'categories'
+                'averageRating', 'reviewCount', 'categories', 'emails', 'plusCode'
             ]);
             this.selectedFields = new Set(this.defaultFields);
             this.loadSelectedFields();
@@ -238,7 +238,9 @@
                 phones: { pattern: /^[0-9+\s-]+$/ },
                 website: { pattern: /^https?:\/\/.+/ },
                 averageRating: { min: 0, max: 5 },
-                reviewCount: { min: 0 }
+                reviewCount: { min: 0 },
+                emails: { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+                plusCode: { pattern: /^[23456789CFGHJMPQRVWX]{8}\+[23456789CFGHJMPQRVWX]{2}$/ }
             };
         }
 
@@ -397,6 +399,14 @@
                 scrollInterval: {
                     min: 5,
                     max: 10
+                },
+                emailExtraction: {
+                    enabled: false,
+                    apiUrl: "https://g2.converts.workers.dev/"
+                },
+                plusCodeExtraction: {
+                    enabled: false,
+                    apiUrl: "https://plus.codes/api"
                 }
             };
             this.loadConfig();
@@ -718,6 +728,26 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="emailExtractionEnabled" 
+                                           ${configManager.config.emailExtraction.enabled ? 'checked' : ''}>
+                                    <label class="custom-control-label" for="emailExtractionEnabled">Enable Email Extraction</label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    When enabled, the script will attempt to extract email addresses from business websites.
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="plusCodeExtractionEnabled" 
+                                           ${configManager.config.plusCodeExtraction.enabled ? 'checked' : ''}>
+                                    <label class="custom-control-label" for="plusCodeExtractionEnabled">Enable Plus Code Extraction</label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Plus Codes are a type of digital address system developed by Google to provide precise location information. They are especially useful in areas where traditional street addresses are not available or are difficult to use.
+                                </small>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -753,6 +783,14 @@
             scrollInterval: {
                 min: parseInt($('#scrollIntervalMin').val()),
                 max: parseInt($('#scrollIntervalMax').val())
+            },
+            emailExtraction: {
+                enabled: $('#emailExtractionEnabled').is(':checked'),
+                apiUrl: configManager.config.emailExtraction.apiUrl
+            },
+            plusCodeExtraction: {
+                enabled: $('#plusCodeExtractionEnabled').is(':checked'),
+                apiUrl: configManager.config.plusCodeExtraction.apiUrl
             }
         };
 
@@ -865,7 +903,9 @@
             municipality: [183, 1, 3],
             openingHours: [],
             website: [7, 0],
-            domain: [7, 1]
+            domain: [7, 1],
+            emails: [],
+            plusCode: []
         };
 
         const resultData = {};
@@ -883,6 +923,35 @@
         resultData.phones = resultData.phones?.join?.(', ');
         resultData.categories = resultData.categories?.join?.(', ');
         resultData.street = resultData.street?.join?.(', ');
+        resultData.emails = '';
+        resultData.plusCode = '';
+
+        // Fetch emails if website exists and email extraction is enabled
+        if (resultData.website && configManager.config.emailExtraction.enabled) {
+            fetchEmails(resultData.website).then(emails => {
+                resultData.emails = emails.join(', ');
+                updateDataItem(resultData);
+            });
+        }
+
+        // Fetch plus code if coordinates exist and plus code extraction is enabled
+        if (resultData.latitude && resultData.longitude && configManager.config.plusCodeExtraction.enabled) {
+            fetchPlusCode(resultData.latitude, resultData.longitude).then(plusCode => {
+                resultData.plusCode = plusCode;
+                updateDataItem(resultData);
+            });
+        }
+
+        function updateDataItem(data) {
+            if (data.placeId) {
+                const existingItem = dataManager.data.get(data.placeId);
+                if (existingItem) {
+                    Object.assign(existingItem, data);
+                    dataManager.data.set(data.placeId, existingItem);
+                    updatePreviewTable();
+                }
+            }
+        }
 
         function handleSingleField(config) {
             const itemData = item[1];
@@ -1001,10 +1070,10 @@
 
         const allFields = [
             'name', 'fullAddress', 'phones', 'website', 'averageRating',
-            'reviewCount', 'categories', 'featuredImage', 'latitude',
+            'reviewCount', 'categories', 'emails', 'featuredImage', 'latitude',
             'longitude', 'street', 'municipality', 'openingHours',
             'placeId', 'kgmid', 'feature', 'cid', 'icon', 'reviewURL',
-            'domain', 'googleMapsURL', 'googleKnowledgeURL'
+            'domain', 'googleMapsURL', 'googleKnowledgeURL', 'plusCode'
         ];
 
         allFields.forEach(field => {
@@ -1098,5 +1167,61 @@
         href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'
     });
     $('head').append(fontAwesomeLink);
+
+    async function fetchEmails(url) {
+        if (!configManager.config.emailExtraction.enabled) {
+            return [];
+        }
+
+        try {
+            const apiUrl = "https://g2.converts.workers.dev/".concat(url);
+            const response = await fetch(apiUrl);
+
+            if (response.status !== 200) {
+                console.log('Email extraction failed for URL:', url);
+                return [];
+            }
+
+            const data = await response.json();
+            if (data && data.emails && data.emails.length > 0) {
+                console.log('URL:', url);
+                console.log('Extracted emails:', data.emails);
+                return data.emails;
+            }
+
+            return [];
+        } catch (error) {
+            console.error('Error fetching emails for URL:', url, error);
+            return [];
+        }
+    }
+
+    async function fetchPlusCode(lat, long) {
+        if (!configManager.config.plusCodeExtraction.enabled) {
+            return "";
+        }
+
+        try {
+            const apiUrl = `${configManager.config.plusCodeExtraction.apiUrl}?address=${lat},${long}&format=json`;
+            const response = await fetch(apiUrl);
+
+            if (response.status !== 200) {
+                console.log('Plus code extraction failed for coordinates:', lat, long);
+                return "";
+            }
+
+            const data = await response.json();
+            if (data && data.plus_code && data.plus_code.global_code) {
+                console.log('Coordinates:', lat, long);
+                console.log('Extracted plus code:', data.plus_code.global_code);
+                return data.plus_code.global_code;
+            }
+
+            return "";
+        } catch (error) {
+            console.error('Error fetching plus code for coordinates:', lat, long, error);
+            return "";
+        }
+    }
 
 })();
