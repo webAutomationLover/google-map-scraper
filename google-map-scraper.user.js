@@ -799,11 +799,24 @@
         $('#configModal').modal('hide');
     });
 
+    // XPath helper function
+    function getElementByXPath(xpath) {
+        return document.evaluate(
+            xpath,
+            document,
+            null,
+            XPathResult.FIRST_ORDERED_NODE_TYPE,
+            null
+        ).singleNodeValue;
+    }
+
     // Modify button injection function
     const injectButton = () => {
-        const targetDiv = document.querySelectorAll('#assistive-chips > div > div > div > div > div > div > div > div > div')[1];
+        // Use XPath to find the target div (button's grandparent)
+        const targetDiv = getElementByXPath("//button[contains(@class, 'e2moi') and not(contains(@jsaction, 'ripple')) and @aria-haspopup='menu']/../..");
+        
         if (targetDiv && !document.querySelector('#my-custom-button')) {
-            console.log('Injecting buttons');
+            console.log('Injecting buttons via XPath');
             const bsButtonDOM = bsButton[0];
             bsButtonDOM.id = 'my-custom-button';
             bsButtonDOM.style.marginLeft = '20px';
@@ -838,7 +851,53 @@
     };
 
     XMLHttpRequest.prototype.send = function() {
+        // Check if this is the target URL
+        const isTargetUrl = this._url && this._url.includes('/search') && this._url.includes('tbm=map');
+        
+        if (isTargetUrl) {
+            console.log('🎯 [TARGET] send api:', this._url);
+            console.log('  - onload exists?', this.onload !== null && this.onload !== undefined);
+            console.log('  - onreadystatechange exists?', this.onreadystatechange !== null && this.onreadystatechange !== undefined);
+        }
+
+        if (!this._listenerAdded) {
+            this._listenerAdded = true;
+            
+            // readystatechange is more low-level and reliable
+            this.addEventListener('readystatechange', function() {
+                const isTarget = this._url && this._url.includes('/search') && this._url.includes('tbm=map');
+                
+                // Only log status for target URL
+                if (isTarget) {
+                    console.log('📡 [TARGET readyState=' + this.readyState + '] URL:', this._url);
+                    
+                    if (this.readyState === 4) {
+                        console.log('📡 [TARGET State 4 - DONE]');
+                        console.log('  - Status:', this.status);
+                        console.log('  - StatusText:', this.statusText);
+                        console.log('  - Response exists:', !!this.responseText);
+                        console.log('  - Response length:', this.responseText ? this.responseText.length : 0);
+                        console.log('  - URL check: includes(/search)=', this._url.includes('/search'));
+                        console.log('  - URL check: includes(tbm=map)=', this._url.includes('tbm=map'));
+                        
+                        if (this.status === 200) {
+                            console.log('✅ [TARGET] Status is 200, should capture!');
+                            console.log('Response preview:', this.responseText ? this.responseText.substring(0, 100) : 'empty');
+                        } else {
+                            console.log('❌ [TARGET] Status is NOT 200, cannot capture');
+                        }
+                    }
+                }
+            });
+        }
+
         this.addEventListener('load', function() {
+            const isTarget = this._url && this._url.includes('/search') && this._url.includes('tbm=map');
+            
+            if (isTarget) {
+                console.log('🎉 [TARGET] LOAD EVENT FIRED!');
+            }
+            
             if (this._url.includes('/search?tbm=map')) {
                 try {
                     var rspJson = JSON.parse(this.responseText.replace(`/*""*/`,""));
@@ -872,7 +931,70 @@
                 }
             }
         });
-
+        
+        // Only monitor error and abort events for target URL
+        if (isTargetUrl) {
+            this.addEventListener('error', function() {
+                console.log('❌ [TARGET] ERROR EVENT - Request failed!');
+            });
+            
+            this.addEventListener('abort', function() {
+                console.log('⚠️⚠️⚠️ [TARGET] ABORT EVENT - Request was cancelled!');
+                console.log('  - This is why we never reach State 4');
+                console.log('  - Google Maps is cancelling the request');
+            });
+            
+            this.addEventListener('timeout', function() {
+                console.log('⏱️ [TARGET] TIMEOUT EVENT');
+            });
+            
+            // Hook the abort method
+            const originalAbort = this.abort;
+            const xhrInstance = this;
+            
+            this.abort = function() {
+                console.log('🛑🛑🛑 [TARGET] abort() is being called!');
+                console.log('  - Current readyState:', xhrInstance.readyState);
+                console.log('  - Current status:', xhrInstance.status);
+                console.log('  - Response available:', !!xhrInstance.responseText);
+                console.log('  - Response length:', xhrInstance.responseText ? xhrInstance.responseText.length : 0);
+                
+                // If response data is available, try to process it before abort
+                if (xhrInstance.responseText && xhrInstance.responseText.length > 0) {
+                    console.log('💾 [TARGET] Trying to save data BEFORE abort...');
+                    try {
+                        var rspJson = JSON.parse(xhrInstance.responseText.replace(`/*""*/`,""));
+                        var e = rspJson.d;
+                        var cleanedData = e.replace(`)]}'`, "");
+                        let parsedData = JSON.parse(cleanedData);
+                        let dataList = parsedData[0][1];
+                        
+                        let filteredData = dataList.filter(item => {
+                            return item?.[14] !== undefined;
+                        });
+                        
+                        if (!filteredData || filteredData.length < 1) {
+                            filteredData = parsedData[64];
+                        }
+                        
+                        if (filteredData) {
+                            var formatedData = formatAllData(filteredData);
+                            formatedData.forEach(item => dataManager.addItem(item));
+                            console.log('✅ [TARGET] Data saved before abort! Total items:', dataManager.getCount());
+                            updateButtonText();
+                        }
+                    } catch (error) {
+                        console.log('❌ [TARGET] Failed to parse data before abort:', error.message);
+                    }
+                } else {
+                    console.log('⚠️ [TARGET] No response data available before abort');
+                }
+                
+                console.trace('Abort call stack:');
+                return originalAbort.apply(this, arguments);
+            };
+        }
+        
         return originalSend.apply(this, arguments);
     };
 
@@ -1225,3 +1347,4 @@
     }
 
 })();
+
